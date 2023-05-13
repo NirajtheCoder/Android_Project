@@ -11,10 +11,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -22,7 +20,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-
+import com.example.esales.pref.MyPreferences;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -30,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity  {
+    private MyPreferences preferences;
     String url= "http://esales.zeetsoftserve.com/api/v1/login";
     RequestQueue queue;
     @Override
@@ -38,6 +37,11 @@ public class MainActivity extends AppCompatActivity  {
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
 
+      /*  preferences = new MyPreferences(this);
+        preferences.setPreferenceString("myStringPreference", "Hello, World!");
+        // Get a String preference
+        String value = preferences.getPreferenceString("myStringPreference", "");
+        Log.d("MainActivity", "Value: " + value);*/
 
         EditText usernameEditText = findViewById(R.id.user_name);
         EditText passwordEditText = findViewById(R.id.pass_word);
@@ -76,6 +80,13 @@ public class MainActivity extends AppCompatActivity  {
                                     String access_token = jsonObject.getString("access_token");
                                     String name = dataObject.getString("name");
                                     Integer id = dataObject.getInt("id");
+
+                                    // Save the preferences using the MyPreferences class
+                                    MyPreferences preferences = new MyPreferences(MainActivity.this);
+                                    preferences.setPreferenceString("access_token", access_token);
+                                    preferences.setPreferenceInt("id", id);
+                                    preferences.setPreferenceString("name", name);
+
                                     Intent intent = new Intent(MainActivity.this, Home.class);
                                     intent.putExtra("message", message);
                                     intent.putExtra("access_token",access_token);

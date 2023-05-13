@@ -24,10 +24,15 @@ import android.provider.Settings;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,6 +44,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.esales.pref.MyPreferences;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -57,8 +63,6 @@ import java.util.List;
 import java.util.Map;
 
 public class Home extends AppCompatActivity {
-
-
     String url = "http://esales.zeetsoftserve.com/api/v1/logout";
     String link = "http://esales.zeetsoftserve.com/api/v1/start_day";
     private LocationManager locationManager;
@@ -120,19 +124,16 @@ public class Home extends AppCompatActivity {
                     //check gps enable or not
                     if (!locationManager.isProviderEnabled(GPS_PROVIDER)) {
                         onGps();
-
                     } else {
                         getLocation();
                     }
-
-
+                    responce();
                     StringRequest stringRequest1 = new StringRequest(Request.Method.POST, link, new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
                             try {
                                 JSONObject jsonObject = new JSONObject(response);
                                 boolean status = jsonObject.getBoolean("status");
-
                                 if (status) {
                                     JSONObject dataObject = jsonObject.getJSONObject("data");
                                     Integer id = dataObject.getInt("id");
@@ -140,13 +141,14 @@ public class Home extends AppCompatActivity {
                                     Integer start_id = dataObject.getInt("start_id");
                                     Integer start_time = dataObject.getInt("start_time");
 
+                                    MyPreferences preferences = new MyPreferences(Home.this);
+                                    preferences.setPreferenceInt("id", id);
 
                                     Intent intent1 = new Intent(Home.this, Punch.class);
-
                                     intent1.putExtra("id", id);
                                     intent1.putExtra("user_id", user_id);
                                     intent1.putExtra("start_time", start_time);
-                                    intent1.putExtra("start_id",start_id);
+                                    intent1.putExtra("start_id", start_id);
                                     intent1.putExtra("latitude", latitude);
                                     intent1.putExtra("longitude", longitude);
                                     intent1.putExtra("name", name);
@@ -156,24 +158,26 @@ public class Home extends AppCompatActivity {
                                     // handle false status
                                     String message = jsonObject.getString("message");
                                     Toast.makeText(Home.this, message, Toast.LENGTH_SHORT).show();
+
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
                         }
-                    }, new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            if (error.networkResponse != null && error.networkResponse.statusCode == 101) {
-                                Intent intent = new Intent(Home.this, MainActivity.class);
-                                startActivity(intent);
-                                finish();
-                            } else {
-                                Log.d("Error.Response", error.getMessage());
-                                Toast.makeText(Home.this, "Error.Response " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    }) {
+                    },
+                            new Response.ErrorListener() {
+                                @Override
+                                public void onErrorResponse(VolleyError error) {
+                                    if (error.networkResponse != null && error.networkResponse.statusCode == 101) {
+                                        Intent intent = new Intent(Home.this, MainActivity.class);
+                                        startActivity(intent);
+                                        finish();
+                                    } else {
+                                        Log.d("Error.Response", error.getMessage());
+                                        Toast.makeText(Home.this, "Error.Response " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            }) {
                         @Override
                         protected Map<String, String> getParams() {
                             Map<String, String> params = new HashMap<String, String>();
@@ -227,6 +231,9 @@ public class Home extends AppCompatActivity {
                     }
                 }
             }
+            private void responce() {
+
+            }
 
             private void onGps() {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(Home.this);
@@ -244,6 +251,7 @@ public class Home extends AppCompatActivity {
                 final AlertDialog alertDialog = builder.create();
                 alertDialog.show();
             }
+
         });
 
         logout_img.setOnClickListener(new View.OnClickListener() {
@@ -296,5 +304,6 @@ public class Home extends AppCompatActivity {
             }
         });
     }
+
 
 }
