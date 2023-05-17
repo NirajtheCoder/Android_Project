@@ -2,11 +2,9 @@ package com.example.esales;
 
 import static android.location.LocationManager.GPS_PROVIDER;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -16,20 +14,18 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
@@ -41,16 +37,8 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.esales.pref.MyPreferences;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -59,7 +47,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Home extends AppCompatActivity {
@@ -71,7 +58,6 @@ public class Home extends AppCompatActivity {
     private String latitude;
     private String longitude;
     private RequestQueue que;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,39 +67,52 @@ public class Home extends AppCompatActivity {
         TextView text_view = findViewById(R.id.text_view);
         TextView date_time = findViewById(R.id.date_time);
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        ActivityCompat.requestPermissions(Home.this, new String[]
-                {Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_LOCATION);
-
+        ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_LOCATION);
         @SuppressLint({"MissingInflatedId", "LocalSuppress"}) Button start_button = findViewById(R.id.start_button);
         queue = Volley.newRequestQueue(this);
         que = Volley.newRequestQueue(this);
 
-        Intent intent = getIntent();
-        String messages = intent.getStringExtra("message");
-        String access_token = intent.getStringExtra("access_token");
-        String name = intent.getStringExtra("name");
-        //String messages = intent.getStringExtra("messages");
-        //String id = getIntent().getStringExtra("id");
-        int id = intent.getIntExtra("id", 0);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = preferences.edit();
 
-        text_view.setText(messages);
+        String message = preferences.getString("message", "");
+        String name = preferences.getString("name", "");
+        String access_token = preferences.getString("access_token", "");
+        int id = preferences.getInt("id", 0);
+        String executive_location = preferences.getString("executive_location", "");
+        int executive_distance_travelled = preferences.getInt("executive_distance_travelled",0);
+        text_view.setText(message);
 
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMMM yyyy");
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
-
         String date = dateFormat.format(calendar.getTime());
         String time = timeFormat.format(calendar.getTime());
 
         String messagess = "Today is <b>\"" + date + "\"</b> and the Time is <b>\"" + time + "\"</b>. Please click on the start button below to start your Sales Adventure.";
-
-
         date_time.setText(Html.fromHtml(messagess));
         date_time.setMovementMethod(LinkMovementMethod.getInstance());
-
         start_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+               /* SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.remove("access_token");
+                editor.apply();*//*
+
+                // Start the MainActivity
+                Intent intent = new Intent(Home.this, MainActivity.class);
+                startActivity(intent);
+                finish();*/
+
+                LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+                View popupView = inflater.inflate(R.layout.complete_meeting, null);
+                //int wid = LinearLayout.LayoutParams.WRAP_CONTENT;
+                int wid = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 370, getResources().getDisplayMetrics());
+                int high = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 300, getResources().getDisplayMetrics());
+                boolean focus= true;
+                PopupWindow popupWindow = new PopupWindow(popupView, wid, high, focus);
+                popupWindow.showAtLocation(view, Gravity.CENTER, 0, 0);
 
                 try {
                     Date now = new Date();
@@ -127,7 +126,6 @@ public class Home extends AppCompatActivity {
                     } else {
                         getLocation();
                     }
-                    responce();
                     StringRequest stringRequest1 = new StringRequest(Request.Method.POST, link, new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
@@ -141,19 +139,30 @@ public class Home extends AppCompatActivity {
                                     Integer start_id = dataObject.getInt("start_id");
                                     Integer start_time = dataObject.getInt("start_time");
 
-                                    MyPreferences preferences = new MyPreferences(Home.this);
-                                    preferences.setPreferenceInt("id", id);
+                                   /* MyPreferences preferences = new MyPreferences(Home.this);
+                                    preferences.setPreferenceInt("id", id);*/
+
+                                    editor.putString("name",name);
+                                    editor.putInt("id",id);
+                                    editor.putInt("user_id",user_id);
+                                    editor.putInt("start_time",start_time);
+                                    editor.putString("latitude",latitude);
+                                    editor.putString("longitude",longitude);
+                                    editor.putInt("start_id",start_id);
+                                    editor.putString("access_token",access_token);
 
                                     Intent intent1 = new Intent(Home.this, Punch.class);
-                                    intent1.putExtra("id", id);
+                                    startActivity(intent1);
+                                    finish();
+                                    /*intent1.putExtra("id", id);
                                     intent1.putExtra("user_id", user_id);
                                     intent1.putExtra("start_time", start_time);
                                     intent1.putExtra("start_id", start_id);
                                     intent1.putExtra("latitude", latitude);
                                     intent1.putExtra("longitude", longitude);
                                     intent1.putExtra("name", name);
-                                    intent1.putExtra("access_token", access_token);
-                                    startActivity(intent1);
+                                    intent1.putExtra("access_token", access_token);*/
+
                                 } else {
                                     // handle false status
                                     String message = jsonObject.getString("message");
@@ -187,12 +196,10 @@ public class Home extends AppCompatActivity {
                             params.put("longitude", longitude);
                             return params;
                         }
-
                         @Override
                         public Map<String, String> getHeaders() throws AuthFailureError {
                             Map<String, String> headers = new HashMap<String, String>();
                             headers.put("Authorization", "Bearer " + access_token);
-                            //headers.put("Content-Type", "application/x-www-form-urlencoded");
                             return headers;
                         }
                     };
@@ -231,9 +238,6 @@ public class Home extends AppCompatActivity {
                     }
                 }
             }
-            private void responce() {
-
-            }
 
             private void onGps() {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(Home.this);
@@ -251,32 +255,26 @@ public class Home extends AppCompatActivity {
                 final AlertDialog alertDialog = builder.create();
                 alertDialog.show();
             }
-
         });
 
         logout_img.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                SharedPreferences sharedPreferences = getSharedPreferences("Authorization", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-
                 StringRequest postRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         try {
                             JSONObject jsonObject = new JSONObject(response);
                             boolean status = jsonObject.getBoolean("status");
-
                             if (status) {
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.remove("access_token");
+                                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                                SharedPreferences.Editor editor = preferences.edit();
+                                editor.clear();
                                 editor.apply();
-
-                                Intent intent = new Intent(Home.this, MainActivity.class);
-                                startActivity(intent);
                                 finish();
-                            } else {
+                                Intent intent1 = new Intent(Home.this, MainActivity.class);
+                                startActivity(intent1);
+                            }  else {
                                 String message = jsonObject.getString("message");
                                 Toast.makeText(Home.this, message, Toast.LENGTH_SHORT).show();
                             }
@@ -292,7 +290,6 @@ public class Home extends AppCompatActivity {
                         Toast.makeText(Home.this, "Error.Response " + error.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }) {
-
                     @Override
                     public Map<String, String> getHeaders() {
                         Map<String, String> headers = new HashMap<>();
@@ -304,6 +301,4 @@ public class Home extends AppCompatActivity {
             }
         });
     }
-
-
 }

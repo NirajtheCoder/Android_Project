@@ -2,52 +2,52 @@ package com.example.esales;
 
 import android.content.Context;
 import android.content.Intent;
-import android.location.LocationListener;
-import android.location.LocationManager;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
+import android.preference.PreferenceManager;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
+
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.esales.pref.MyPreferences;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity  {
-    private MyPreferences preferences;
-    String url= "http://esales.zeetsoftserve.com/api/v1/login";
+public class MainActivity extends AppCompatActivity {
+    String url = "http://esales.zeetsoftserve.com/api/v1/login";
     RequestQueue queue;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
-
-      /*  preferences = new MyPreferences(this);
-        preferences.setPreferenceString("myStringPreference", "Hello, World!");
-        // Get a String preference
-        String value = preferences.getPreferenceString("myStringPreference", "");
-        Log.d("MainActivity", "Value: " + value);*/
-
         EditText usernameEditText = findViewById(R.id.user_name);
         EditText passwordEditText = findViewById(R.id.pass_word);
         Button loginButton = findViewById(R.id.Log_in);
-
         queue = Volley.newRequestQueue(this);
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = preferences.edit();
+
+        if (preferences.contains("access_token")) {
+            Intent intent = new Intent(MainActivity.this, Home.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
 
         loginButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity  {
                     passwordEditText.setError("Password must be at least 6 characters long.");
                     passwordEditText.requestFocus();
                 } else {
+
                     StringRequest postRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
@@ -79,30 +80,26 @@ public class MainActivity extends AppCompatActivity  {
                                     String message = jsonObject.getString("message");
                                     String access_token = jsonObject.getString("access_token");
                                     String name = dataObject.getString("name");
+                                    String executive_location=jsonObject.getString("executive_location");
+                                    Integer executive_distance_travelled=dataObject.getInt("executive_distance_travelled");
                                     Integer id = dataObject.getInt("id");
 
-                                    // Save the preferences using the MyPreferences class
-                                    MyPreferences preferences = new MyPreferences(MainActivity.this);
-                                    preferences.setPreferenceString("access_token", access_token);
-                                    preferences.setPreferenceInt("id", id);
-                                    preferences.setPreferenceString("name", name);
+                                    editor.putString("message",message);
+                                    editor.putString("name",name);
+                                    editor.putString("executive_location",executive_location);
+                                    editor.putInt("executive_distance_travelled",executive_distance_travelled);
+                                    editor.putString("access_token",access_token);
+                                    editor.putInt("id",id);
+                                    editor.apply();
 
-                                    Intent intent = new Intent(MainActivity.this, Home.class);
-                                    intent.putExtra("message", message);
-                                    intent.putExtra("access_token",access_token);
-                                    intent.putExtra("id",id);
-                                    intent.putExtra("name",name);
+                                    Intent intent = new Intent(MainActivity.this,Home.class);
                                     startActivity(intent);
-                                   // String name = jsonObject.getString("name");
-                                   /* Intent check = new Intent(MainActivity.this, Home.class);
-                                    check.putExtra("Extra_Message",name);
-                                    startActivity(check);*/
+                                    finish();
 
                                 } else {
                                     String message = jsonObject.getString("message");
                                     Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
                                 }
-
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -112,7 +109,7 @@ public class MainActivity extends AppCompatActivity  {
                         @Override
                         public void onErrorResponse(VolleyError error) {
                             //Log.d("Error.Response", error.getMessage());
-                            Toast.makeText(MainActivity.this, "Error.Response "+error.getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Error.Response " + error.getMessage(), Toast.LENGTH_SHORT).show();
                         }
                     }) {
                         @Override
@@ -124,10 +121,9 @@ public class MainActivity extends AppCompatActivity  {
                         }
                     };
                     queue.add(postRequest);
-
                 }
             }
+
         });
     }
-
 }
