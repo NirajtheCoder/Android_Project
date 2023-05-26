@@ -58,6 +58,7 @@ public class Home extends AppCompatActivity {
     private String latitude;
     private String longitude;
     private RequestQueue que;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,15 +80,27 @@ public class Home extends AppCompatActivity {
         String name = preferences.getString("name", "");
         String access_token = preferences.getString("access_token", "");
         int id = preferences.getInt("id", 0);
-        String executive_location = preferences.getString("executive_location", "");
-        int executive_distance_travelled = preferences.getInt("executive_distance_travelled",0);
-        text_view.setText(message);
+        //int user_id = preferences.getInt("id", 0);
 
+        //int lastVisitId = preferences.getInt("last_visit_id", 0);
+        //String executive_location = preferences.getString("executive_location", "");
+        //int executive_distance_travelled = preferences.getInt("executive_distance_travelled",0);
+
+        text_view.setText(message);
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMMM yyyy");
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
         String date = dateFormat.format(calendar.getTime());
         String time = timeFormat.format(calendar.getTime());
+
+       //Toast.makeText(this, String.valueOf(user_id), Toast.LENGTH_SHORT).show();
+
+        if (preferences.contains("access_token")) {
+            Intent intent = new Intent(Home.this, Punch.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
 
         String messagess = "Today is <b>\"" + date + "\"</b> and the Time is <b>\"" + time + "\"</b>. Please click on the start button below to start your Sales Adventure.";
         date_time.setText(Html.fromHtml(messagess));
@@ -96,23 +109,13 @@ public class Home extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-               /* SharedPreferences.Editor editor = sharedPreferences.edit();
+                SharedPreferences.Editor editor = preferences.edit();
                 editor.remove("access_token");
-                editor.apply();*//*
-
+                editor.apply();
                 // Start the MainActivity
                 Intent intent = new Intent(Home.this, MainActivity.class);
                 startActivity(intent);
-                finish();*/
-
-                LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-                View popupView = inflater.inflate(R.layout.complete_meeting, null);
-                //int wid = LinearLayout.LayoutParams.WRAP_CONTENT;
-                int wid = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 370, getResources().getDisplayMetrics());
-                int high = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 300, getResources().getDisplayMetrics());
-                boolean focus= true;
-                PopupWindow popupWindow = new PopupWindow(popupView, wid, high, focus);
-                popupWindow.showAtLocation(view, Gravity.CENTER, 0, 0);
+                finish();
 
                 try {
                     Date now = new Date();
@@ -135,39 +138,29 @@ public class Home extends AppCompatActivity {
                                 if (status) {
                                     JSONObject dataObject = jsonObject.getJSONObject("data");
                                     Integer id = dataObject.getInt("id");
-                                    Integer user_id = dataObject.getInt("user_id");
-                                    Integer start_id = dataObject.getInt("start_id");
+                                    //Integer user_id = dataObject.getInt("user_id");
+                                    Integer startId = dataObject.getInt("start_id");
                                     Integer start_time = dataObject.getInt("start_time");
 
                                    /* MyPreferences preferences = new MyPreferences(Home.this);
                                     preferences.setPreferenceInt("id", id);*/
-
-                                    editor.putString("name",name);
-                                    editor.putInt("id",id);
-                                    editor.putInt("user_id",user_id);
-                                    editor.putInt("start_time",start_time);
-                                    editor.putString("latitude",latitude);
-                                    editor.putString("longitude",longitude);
-                                    editor.putInt("start_id",start_id);
-                                    editor.putString("access_token",access_token);
+                                    editor.putInt("id", id);
+                                    editor.putInt("start_id", startId);
+                                    editor.putString("name", name);
+                                    editor.putString("access_token", access_token);
+                                   // editor.putInt("user_id", user_id);
+                                    editor.putInt("start_time", start_time);
+                                    editor.putString("latitude", latitude);
+                                    editor.putString("longitude", longitude);
 
                                     Intent intent1 = new Intent(Home.this, Punch.class);
                                     startActivity(intent1);
                                     finish();
-                                    /*intent1.putExtra("id", id);
-                                    intent1.putExtra("user_id", user_id);
-                                    intent1.putExtra("start_time", start_time);
-                                    intent1.putExtra("start_id", start_id);
-                                    intent1.putExtra("latitude", latitude);
-                                    intent1.putExtra("longitude", longitude);
-                                    intent1.putExtra("name", name);
-                                    intent1.putExtra("access_token", access_token);*/
 
                                 } else {
                                     // handle false status
                                     String message = jsonObject.getString("message");
                                     Toast.makeText(Home.this, message, Toast.LENGTH_SHORT).show();
-
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -196,6 +189,7 @@ public class Home extends AppCompatActivity {
                             params.put("longitude", longitude);
                             return params;
                         }
+
                         @Override
                         public Map<String, String> getHeaders() throws AuthFailureError {
                             Map<String, String> headers = new HashMap<String, String>();
@@ -274,7 +268,7 @@ public class Home extends AppCompatActivity {
                                 finish();
                                 Intent intent1 = new Intent(Home.this, MainActivity.class);
                                 startActivity(intent1);
-                            }  else {
+                            } else {
                                 String message = jsonObject.getString("message");
                                 Toast.makeText(Home.this, message, Toast.LENGTH_SHORT).show();
                             }
@@ -301,4 +295,9 @@ public class Home extends AppCompatActivity {
             }
         });
     }
+   /* @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        //outState.putString(KEY_MY_TEXT,.getText().toString();
+    }*/
 }

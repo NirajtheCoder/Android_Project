@@ -20,6 +20,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -29,6 +30,7 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
     String url = "http://esales.zeetsoftserve.com/api/v1/login";
     RequestQueue queue;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,9 +50,17 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         }
-
         loginButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+
+            /*    if (preferences.contains("access_token")) {
+                    Intent intent = new Intent(MainActivity.this, Home.class);
+                    startActivity(intent);
+                    finish();
+                } else {
+                    Toast.makeText(MainActivity.this, "Please login first", Toast.LENGTH_SHORT).show();
+                }*/
+
                 String username = usernameEditText.getText().toString();
                 String password = passwordEditText.getText().toString();
 
@@ -76,29 +86,49 @@ public class MainActivity extends AppCompatActivity {
                                 boolean status = jsonObject.getBoolean("status");
 
                                 if (status) {
-                                    JSONObject dataObject = jsonObject.getJSONObject("data");
                                     String message = jsonObject.getString("message");
                                     String access_token = jsonObject.getString("access_token");
+                                    JSONObject dataObject = jsonObject.getJSONObject("data");
+
+                                    int id = dataObject.getInt("id");
                                     String name = dataObject.getString("name");
-                                    String executive_location=jsonObject.getString("executive_location");
-                                    Integer executive_distance_travelled=dataObject.getInt("executive_distance_travelled");
-                                    Integer id = dataObject.getInt("id");
+                                    String email = dataObject.getString("email");
 
-                                    editor.putString("message",message);
-                                    editor.putString("name",name);
-                                    editor.putString("executive_location",executive_location);
-                                    editor.putInt("executive_distance_travelled",executive_distance_travelled);
-                                    editor.putString("access_token",access_token);
-                                    editor.putInt("id",id);
-                                    editor.apply();
+                                    JSONArray lastVisitArray = jsonObject.getJSONArray("last_visit");
+                                    if (lastVisitArray.length() > 0) {
 
-                                    Intent intent = new Intent(MainActivity.this,Home.class);
+                                        JSONObject lastVisitObject = lastVisitArray.getJSONObject(0);
+
+                                        int lastVisitId = lastVisitObject.getInt("id");
+                                        int startId = lastVisitObject.getInt("start_id");
+                                        String destinationLatitude = lastVisitObject.getString("destination_latitude");
+                                        String destinationLongitude = lastVisitObject.getString("destination_longitude");
+                                        String executiveLocation = lastVisitObject.getString("executive_location");
+                                        String executiveDistanceTravelled = lastVisitObject.getString("executive_distance_travelled");
+                                        String arrivedTime = lastVisitObject.getString("arrived_time");
+                                        int meetingStatus = lastVisitObject.getInt("meeting_status");
+
+                                        // Store the values in SharedPreferences
+                                        editor.putString("message", message);
+                                        editor.putString("access_token", access_token);
+                                        editor.putInt("id", id);
+                                        editor.putString("name", name);
+                                        editor.putString("email", email);
+                                        editor.putInt("last_visit_id", lastVisitId);
+                                        editor.putInt("start_id", startId);
+                                        editor.putString("destination_latitude", destinationLatitude);
+                                        editor.putString("destination_longitude", destinationLongitude);
+                                        editor.putString("executive_location", executiveLocation);
+                                        editor.putString("executive_distance_travelled", executiveDistanceTravelled);
+                                        editor.putString("arrived_time", arrivedTime);
+                                        editor.putInt("meeting_status", meetingStatus);
+                                        editor.apply();
+
+                                    }
+
+                                    Intent intent = new Intent(MainActivity.this, Home.class);
                                     startActivity(intent);
                                     finish();
-
-                                } else {
-                                    String message = jsonObject.getString("message");
-                                    Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
                                 }
 
                             } catch (JSONException e) {
@@ -123,7 +153,6 @@ public class MainActivity extends AppCompatActivity {
                     queue.add(postRequest);
                 }
             }
-
         });
     }
 }

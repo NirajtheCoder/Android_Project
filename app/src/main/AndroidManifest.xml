@@ -17,6 +17,9 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".Exit_Arive"
+            android:exported="false" />
+        <activity
             android:name=".Exit"
             android:exported="false" />
         <activity

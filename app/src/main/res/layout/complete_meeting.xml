@@ -3,13 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/purple_200"
+    android:background="@drawable/box"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <LinearLayout
         android:id="@+id/linear_layout"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="60dp"
         android:gravity="center"
         android:background="#25616F"
         app:layout_constraintTop_toTopOf="parent"
@@ -70,7 +70,7 @@
 
 
     <EditText
-        android:id="@+id/dis_editText"
+        android:id="@+id/dis_edit"
         android:layout_width="70dp"
         android:layout_height="30dp"
         android:layout_marginStart="24dp"
@@ -90,8 +90,7 @@
         android:layout_width="50dp"
         android:layout_height="25dp"
         android:layout_marginTop="25dp"
-        android:layout_marginEnd="70dp"
-        android:layout_marginRight="70dp"
+        android:layout_marginRight="50dp"
         android:fontFamily="@font/poppins_bold"
         android:gravity="center"
         android:text="KM"
@@ -101,21 +100,24 @@
         app:layout_constraintTop_toBottomOf="@+id/location" />
 
     <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="140dp"
-        android:layout_marginLeft="140dp"
-        android:layout_marginTop="45dp"
-        android:layout_marginEnd="177dp"
-        android:layout_marginRight="177dp"
-        android:text="Save"
+        android:id="@+id/submit"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginTop="100dp"
+        android:layout_marginEnd="50dp"
+        android:text="Submit"
+        android:textSize="17sp"
         android:textAllCaps="false"
-        app:backgroundTint="#25616F"
-        android:background="@drawable/rounded_edittext"
+        android:gravity="center"
+        android:textColor="#FFFFFF"
+        android:fontFamily="@font/poppins_regular"
+        android:background="@drawable/box"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dis_editText" />
+        app:backgroundTint="#25616F"
+        app:layout_constraintTop_toBottomOf="@+id/location" />
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
